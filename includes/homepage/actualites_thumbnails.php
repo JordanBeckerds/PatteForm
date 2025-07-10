@@ -1,9 +1,16 @@
 <?php
+// Fetch the single group_name from group_elems where id=1
+$stmtGroup = $pdo->prepare("SELECT group_name FROM group_elems WHERE id = 1 LIMIT 1");
+$stmtGroup->execute();
+$group = $stmtGroup->fetch(PDO::FETCH_ASSOC);
+$groupName = $group['group_name'] ?? 'LA SPA';
 
+// Fetch latest 3 actualites
 $stmt = $pdo->prepare("SELECT * FROM actualite ORDER BY id DESC LIMIT 3");
 $stmt->execute();
 $actualites = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Escape helper
 function h($str) {
     return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
@@ -11,62 +18,277 @@ function h($str) {
 $baseUrl = 'https://www.la-spa.fr';
 ?>
 
+<style>
+  /* Container for actualites */
+  .actualites-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6rem; /* default gap between thumbnails */
+  }
+
+  /* Default actualite-card style */
+  .actualite-card {
+    height: 50vh;
+    width: 20vw;
+    min-width: 320px;
+    max-width: 100%;
+    background-color: #f9fafb; /* bg-gray-50 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); /* shadow-md */
+    transition: box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .actualite-card:hover {
+    box-shadow: 0 10px 15px rgb(0 0 0 / 0.1); /* shadow-lg */
+  }
+
+  /* Image section */
+  .actualite-image {
+    height: 55%;
+    overflow: hidden;
+  }
+
+  .actualite-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Content */
+  .actualite-content {
+    padding: 1rem;
+    height: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 1rem; /* text-base */
+  }
+
+  /* Clamp description text - default desktop 4 lines */
+  .line-clamp-4 {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Share container styles */
+  .share-container {
+    position: relative;
+    overflow: hidden;
+    width: 126px;
+    transition: width 0.3s ease-in-out;
+    cursor: pointer;
+  }
+
+  /* Desktop hover animation only for desktop */
+  @media (min-width: 1025px) {
+    .share-container:hover {
+      width: 230px;
+    }
+
+    .share-inner {
+      display: flex;
+      align-items: center;
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .share-container:hover .share-inner {
+      transform: translateX(-54px);
+    }
+
+    .share-text {
+      white-space: nowrap;
+      margin-right: 0.25rem;
+      color: #4B5563; /* text-gray-700 */
+      font-size: 0.875rem; /* text-sm */
+    }
+
+    .share-icons {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease-in-out;
+      margin-left: 0.25rem;
+    }
+
+    .share-container:hover .share-icons {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .share-icons span.separator {
+      color: #9CA3AF; /* text-gray-400 */
+      user-select: none;
+    }
+  }
+
+  /* On mobile and iPad: no hover animation, share button fully visible */
+  @media (max-width: 1024px) {
+    .share-container {
+      width: 126px !important;
+      overflow: visible !important;
+    }
+
+    .share-inner {
+      display: flex;
+      align-items: center;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    .share-text {
+      white-space: normal;
+      margin-right: 0.25rem;
+      color: #4B5563; /* text-gray-700 */
+      font-size: 0.875rem; /* text-sm */
+    }
+
+    .share-icons {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      margin-left: 0;
+      gap: 0;
+      transition: none !important;
+    }
+  }
+
+  /* Responsive fixes */
+
+  /* Mobile first: single column stacked */
+  @media (max-width: 640px) {
+    .actualite-card {
+      width: 90vw !important;
+      height: auto !important;
+      min-height: 300px;
+      margin: 0 auto 2rem;
+      flex-direction: column;
+    }
+
+    .actualite-image {
+      height: 200px !important;
+    }
+
+    .actualites-container {
+      gap: 1.5rem;
+    }
+
+    /* Clamp text at 2 lines on mobile */
+    .line-clamp-4 {
+      -webkit-line-clamp: 2;
+    }
+  }
+
+  /* iPad (641px to 1024px): clamp description at 1 line */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .line-clamp-4 {
+      -webkit-line-clamp: 1;
+    }
+  }
+
+  /* Medium screens: wider, with more gap between thumbnails */
+  @media (min-width: 641px) and (aspect-ratio: 16/9) {
+    .actualites-container {
+      gap: 3rem; /* bigger gap on 16:9 aspect ratio */
+      justify-content: center;
+    }
+  }
+
+  /* Smaller 16:9 screens (but above mobile width), grid 2 top + 1 bottom */
+  /* We'll define max-width for "smaller 16:9" — let's say max-width: 900px */
+  @media (max-width: 900px) and (min-width: 641px) and (aspect-ratio: 16/9) {
+    .actualites-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: auto auto;
+      gap: 2rem;
+      justify-items: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .actualite-card {
+      width: 320px; /* fixed width for better grid control */
+      height: auto;
+      min-height: 350px;
+    }
+
+    /* The third card should go on the second row, spanning both columns or centered */
+    .actualites-container > div:nth-child(3) {
+      grid-column: 1 / span 2;
+      justify-self: center;
+      width: 320px;
+    }
+  }
+</style>
+
 <div class="bg-white py-20">
   <div class="container mx-auto px-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-wrap">
 
+    <div class="actualites-container">
       <?php foreach ($actualites as $index => $act): 
           $title = $act['titre'] ?? 'Titre non disponible';
-          $description = $act['description'] ?? 'Descritpion non disponible';
+          $description = $act['description'] ?? 'Description non disponible';
           $slug = $act['slug'] ?? '';
           $url = '../public/actualites.php?id=' . h($act['id']);
           $date = date('d.m.Y', strtotime($act['date'] ?? 'now'));
           $img = $act['img'] ?? 'https://via.placeholder.com/348x232?text=No+Image';
+
+          // Use the fetched groupName for all items
           $shareUrl = $baseUrl . $url;
-          $shareText = $title . ' - LA SPA';
-          $mailSubject = 'SPA-' . $title . ' - LA SPA';
+          $shareText = $title . ' - ' . $groupName;
+          $mailSubject = $groupName . ' - ' . $title;
           $mailBody = $shareUrl;
       ?>
-        <div class="bg-gray-50 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden flex flex-col h-[50vh] w-[20vw] mx-auto">
-          <a href="<?= h($url) ?>" class="block w-full h-[55%] overflow-hidden">
-            <img src="<?= h($img) ?>" alt="<?= h($title) ?>" class="w-full h-full object-cover" loading="lazy" />
+        <div class="actualite-card">
+          <a href="<?= h($url) ?>" class="actualite-image">
+            <img src="<?= h($img) ?>" alt="<?= h($title) ?>" loading="lazy" />
           </a>
 
-          <div class="p-4 h-[45%] flex flex-col justify-between flex-grow text-base">
+          <div class="actualite-content">
             <div>
               <a href="<?= h($url) ?>">
                 <p class="text-sm text-gray-400 mb-2"><?= h($date) ?></p>
                 <h3 class="text-md font-semibold text-gray-900 hover:text-orange-600 transition-colors"><?= h($title) ?></h3>
-                <p class="line-clamp-4" ><?= h($description) ?></p>
+                <p class="line-clamp-4"><?= h($description) ?></p>
               </a>
             </div>
 
             <div class="mt-5">
               <div 
-                class="relative group overflow-hidden w-[126px] hover:w-[230px] transition-all duration-300 ease-in-out cursor-pointer"
+                class="share-container"
                 data-share-url="<?= h($shareUrl) ?>"
                 data-share-text="<?= h($shareText) ?>"
                 data-mail-subject="<?= h($mailSubject) ?>"
                 data-mail-body="<?= h($mailBody) ?>"
               >
-                <div class="flex items-center transition-transform duration-300 ease-in-out group-hover:-translate-x-[54px]">
+                <div class="share-inner">
 
-                  <!-- Texte "Partager" qui slide -->
-                  <span class="text-sm text-gray-700 whitespace-nowrap min-w-max mr-1">Partager</span>
+                  <!-- Texte "Partager" qui slide only on desktop -->
+                  <span class="share-text">Partager</span>
 
-                  <!-- Share Icon (reste visible) -->
+                  <!-- Share Icon (always visible) -->
                   <img src="../assets/img/share.png" alt="Partager" class="w-5 h-5 mr-2 flex-shrink-0" />
 
-                  <!-- Contenu masqué par défaut -->
-                  <div class="flex items-center space-x-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-1 pointer-events-none group-hover:pointer-events-auto">
-                    <span class="text-gray-400 select-none">|</span>
-                    <a href="https://twitter.com/intent/tweet?text=<?= rawurlencode($shareText) ?>&url=<?= rawurlencode($shareUrl) ?>" target="_blank" rel="noopener noreferrer">
+                  <!-- Contenu masqué par défaut (desktop only) -->
+                  <div class="share-icons">
+                    <span class="separator">|</span>
+                    <a href="https://twitter.com/intent/tweet?text=<?= rawurlencode($shareText) ?>&url=<?= rawurlencode($shareUrl) ?>" target="_blank" rel="noopener noreferrer" title="Partager sur Twitter">
                       <img src="../assets/img/twitter.png" alt="Twitter" class="w-5 h-5" />
                     </a>
-                    <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">
+                    <span class="separator">|</span>
+                    <a href="https://www.instagram.com/sharer.php?u=<?= rawurlencode($shareUrl) ?>" target="_blank" rel="noopener noreferrer" title="Partager sur Instagram">
                       <img src="../assets/img/instagram.png" alt="Instagram" class="w-5 h-5" />
                     </a>
-                    <a href="mailto:?subject=<?= rawurlencode($mailSubject) ?>&body=<?= rawurlencode($mailBody) ?>" target="_blank" rel="noopener noreferrer">
+                    <span class="separator">|</span>
+                    <a href="mailto:?subject=<?= rawurlencode($mailSubject) ?>&body=<?= rawurlencode($mailBody) ?>" title="Partager par Email">
                       <img src="../assets/img/email.png" alt="Email" class="w-5 h-5" />
                     </a>
                   </div>
@@ -78,39 +300,37 @@ $baseUrl = 'https://www.la-spa.fr';
           </div>
         </div>
       <?php endforeach; ?>
-
     </div>
 
-    <div class="mt-24 text-center">
-      <a href="../public/actualites.php" class="inline-block bg-orange-600 text-white py-3 px-8 rounded-md font-medium hover:bg-orange-700 transition-colors">
-        Voir toutes les actualités
-      </a>
-    </div>
   </div>
 </div>
 
 <script>
-  // Detect if Web Share API is supported (for mobile)
-  function isMobileShareSupported() {
-    return navigator.share !== undefined;
-  }
+  // Share container click event for native share API on mobile and iPad (<= 1024px width)
+  document.querySelectorAll('.share-container').forEach(container => {
+    container.addEventListener('click', async function(event) {
+      const screenWidth = window.innerWidth;
+      const shareUrl = container.getAttribute('data-share-url');
+      const shareText = container.getAttribute('data-share-text');
+      const mailSubject = container.getAttribute('data-mail-subject');
+      const mailBody = container.getAttribute('data-mail-body');
 
-  // Attach click handlers for mobile share buttons
-  document.querySelectorAll('.group').forEach(btn => {
-    btn.addEventListener('click', e => {
-      if (window.innerWidth <= 768 && isMobileShareSupported()) {  // Mobile breakpoint
-        e.preventDefault();
-        const shareUrl = btn.getAttribute('data-share-url');
-        const shareText = btn.getAttribute('data-share-text');
+      // Only trigger native share API on iPad and below (≤ 1024px)
+      if (screenWidth <= 1024 && navigator.share) {
+        event.preventDefault();
 
-        navigator.share({
-          title: shareText,
-          text: shareText,
-          url: shareUrl
-        }).catch((error) => {
-          console.error('Error sharing:', error);
-        });
+        try {
+          await navigator.share({
+            title: shareText,
+            text: shareText,
+            url: shareUrl,
+          });
+          console.log('Partagé avec succès');
+        } catch (error) {
+          console.error('Erreur de partage:', error);
+        }
       }
+      // Else, desktop: no click event, normal hover animation
     });
   });
 </script>
