@@ -25,20 +25,21 @@ if (empty($images)) {
 ?>
 
 <!-- TOP SECTION -->
-<div class="w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4 sm:px-6 md:px-72 py-8 md:py-12 bg-[#FEF4EE] rounded-lg min-h-[70vh]">
+<div class="w-full flex flex-col md:flex-row items-center justify-between gap-8 px-4 sm:px-6 md:px-72 py-8 md:py-12 bg-[<?= $color_secondary ?>] rounded-lg min-h-[70vh]">
 
   <!-- LEFT: Text Content -->
-  <div class="w-full md:w-1/2 flex flex-col justify-center space-y-4 md:space-y-6">
-    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-[#F97316]"><?= htmlspecialchars($animal['nom']) ?></h2>
-    <p class="text-xl sm:text-2xl md:text-3xl text-gray-700"><?= htmlspecialchars($animal['race']) ?> - <?= htmlspecialchars($animal['age']) ?> an(s)</p>
+  <div class="w-[80vw] md:w-1/2 flex flex-col justify-center space-y-4 md:space-y-6">
+    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-black"><?= htmlspecialchars($animal['nom']) ?></h2>
+    <p class="text-xl sm:text-2xl md:text-3xl text-black"><?= htmlspecialchars($animal['race']) ?> - <?= htmlspecialchars($animal['age']) ?> an(s)</p>
 
-    <ul class="list-disc pl-5 text-base sm:text-lg md:text-xl text-gray-600">
+    <ul class="list-disc pl-5 text-base sm:text-lg md:text-xl text-black">
       <li><strong>Sexe:</strong> <?= htmlspecialchars($animal['sexe']) ?></li>
       <li><strong>Espèce:</strong> <?= htmlspecialchars($animal['espece']) ?></li>
       <li><strong>Ami des enfants:</strong> <?= $animal['enfant'] ? 'Oui' : 'Non' ?></li>
       <li><strong>Ami des chiens:</strong> <?= $animal['chien'] ? 'Oui' : 'Non' ?></li>
       <li><strong>Ami des chats:</strong> <?= $animal['chat'] ? 'Oui' : 'Non' ?></li>
       <li><strong>Ami des autres animaux:</strong> <?= $animal['autre'] ? 'Oui' : 'Non' ?></li>
+      <img src="<?= $animal['sos'] ? '../assets/img/sos.png' : '' ?>" alt="<?= $animal['sos'] ? 'Oui' : '' ?>" class="h-32 inline-block">
     </ul>
   </div>
 
@@ -47,7 +48,7 @@ if (empty($images)) {
     
     <!-- Left Arrow -->
     <button onclick="prevImage()" 
-      class="flex md:w-14 md:h-14 md:text-4xl w-10 h-10 text-3xl items-center justify-center rounded-full bg-orange-500 text-white font-bold hover:bg-orange-600 transition leading-none" 
+      class="flex md:w-14 md:h-14 md:text-4xl w-10 h-10 text-3xl items-center justify-center rounded-full bg-[<?= $color_tertiary ?>] text-white font-bold hover:brightness-110 transition leading-none" 
       aria-label="Précédent"
       style="align-self: center;">
       ‹
@@ -70,7 +71,7 @@ if (empty($images)) {
 
     <!-- Right Arrow -->
     <button onclick="nextImage()" 
-      class="flex md:w-14 md:h-14 md:text-4xl w-10 h-10 text-3xl items-center justify-center rounded-full bg-orange-500 text-white font-bold hover:bg-orange-600 transition leading-none" 
+      class="flex md:w-14 md:h-14 md:text-4xl w-10 h-10 text-3xl items-center justify-center rounded-full bg-[<?= $color_tertiary ?>] text-white font-bold hover:brightness-110 transition leading-none" 
       aria-label="Suivant"
       style="align-self: center;">
       ›
@@ -79,18 +80,18 @@ if (empty($images)) {
 </div>
 
 <!-- DESCRIPTION SECTION -->
-<div class="w-full bg-white px-4 sm:px-6 md:px-72 pt-10 pb-16 md:pb-12 -mt-8 min-h-[200px] md:min-h-[500px]">
-  <h3 class="text-2xl sm:text-3xl font-semibold text-gray-800 mb-4 mt-6 max-w-4xl mx-auto">Description</h3>
-  <p class="text-base sm:text-xl text-gray-700 leading-relaxed max-w-4xl mx-auto text-left mt-4">
+<div class="w-full mb-24 px-4 sm:px-6 md:px-72 pt-24 md:pb-40 -mt-8 min-h-[200px] md:min-h-[500px]">
+  <h3 class="text-2xl sm:text-3xl font-semibold text-black mb-4 mt-6 max-w-4xl mx-auto">Description</h3>
+  <p class="text-base sm:text-xl text-black leading-relaxed max-w-4xl mx-auto text-left mt-4">
     <?= nl2br(htmlspecialchars($animal['description'])) ?>
   </p>
 </div>
 
 <!-- BUTTON BELOW EVERYTHING -->
-<div class="w-full bg-white flex justify-center pt-4 pb-40 px-4 sm:px-6 md:px-72">
-  <button class="px-14 py-5 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg transition duration-300 max-w-md w-full text-center">
+<div class="flex justify-center pb-40 px-4 sm:px-6 md:px-72">
+  <a href="../public/rencontrer.php?id=<?php echo $id?>" class="px-14 py-5 bg-[<?= $color_tertiary ?>] hover:opacity-70 text-white font-semibold rounded-lg transition duration-300 max-w-md w-full text-center">
     Rencontrer L'animal
-  </button>
+  </a>
 </div>
 
 <script>

@@ -1,54 +1,64 @@
-<!-- Carousel Section -->
-  <?php if (!empty($carousel_images)): ?>
-  <section class="max-w-6xl mx-auto px-6 md:px-20 py-12 relative">
-    <div id="carousel" class="relative w-full h-[60vh] overflow-hidden shadow-lg">
-      <div id="carousel-inner" class="flex transition-transform duration-500 ease-in-out" style="width: <?= count($carousel_images) * 100 ?>%;">
-        <?php foreach ($carousel_images as $cimg): ?>
-          <div class="carousel-item flex-shrink-0 w-full">
-            <img src="<?= htmlspecialchars($cimg['img_url']) ?>" alt="Carousel image" class=" max-h-[60vh] object-contain " />
-          </div>
-        <?php endforeach; ?>
-      </div>
-
-      <!-- Controls -->
-      <button id="prevBtn" aria-label="Previous slide"
-        style="background-color:#F97316;"
-        class="absolute top-1/2 left-2 -translate-y-1/2 rounded-full p-3 shadow-lg text-3xl font-bold z-10 select-none text-white
-              transition duration-300 ease-in-out hover:brightness-110 hover:scale-110">
-        &#10094;
-      </button>
-
-      <button id="nextBtn" aria-label="Next slide"
-        style="background-color:#F97316;"
-        class="absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-3 shadow-lg text-3xl font-bold z-10 select-none text-white
-              transition duration-300 ease-in-out hover:brightness-110 hover:scale-110">
-        &#10095;
-      </button>
+<section class="max-w-6xl mx-auto px-6 md:px-20 pb-48 relative">
+  <div id="carousel" class="relative w-full h-[60vh] ">
+    <div class="relative w-full h-full">
+      <?php foreach ($carousel_images as $index => $cimg): ?>
+        <img
+          src="<?= htmlspecialchars($cimg['img_url']) ?>"
+          alt="Image du carrousel <?= $index + 1 ?>"
+          class="carousel-img absolute top-0 left-0 w-full h-full object-contain transition-opacity duration-700 ease-in-out <?= $index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none' ?>"
+          data-index="<?= $index ?>"
+        />
+      <?php endforeach; ?>
     </div>
-  </section>
 
+    <!-- Buttons, always present, but hidden if only 1 image -->
+    <button id="prevBtn" aria-label="Slide précédent"
+      class="bg-[<?= $color_secondary ?>] absolute top-1/2 left-2 -translate-y-1/2 rounded-full p-3 shadow-lg text-3xl font-bold z-20 text-white
+             transition duration-300 hover:brightness-110 hover:scale-110">
+      &#10094;
+    </button>
 
-  <script>
-    (function() {
-      const carouselInner = document.getElementById('carousel-inner');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
-      const totalItems = <?= count($carousel_images) ?>;
-      let currentIndex = 0;
+    <button id="nextBtn" aria-label="Slide suivant"
+      class="bg-[<?= $color_secondary ?>] absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-3 shadow-lg text-3xl font-bold z-20 text-white
+             transition duration-300 hover:brightness-110 hover:scale-110">
+      &#10095;
+    </button>
+  </div>
+</section>
 
-      function updateCarousel() {
-        carouselInner.style.transform = `translateX(-${currentIndex * 100}%)`;
-      }
+<script>
+  (function () {
+    const images = document.querySelectorAll('#carousel .carousel-img');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let current = 0;
+    const total = images.length;
 
-      prevBtn.addEventListener('click', () => {
-        currentIndex = (currentIndex - 1 + totalItems) % totalItems;
-        updateCarousel();
+    // Hide buttons if only 1 image
+    if (total <= 1) {
+      prevBtn.style.display = 'none';
+      nextBtn.style.display = 'none';
+    }
+
+    function showImage(index) {
+      images.forEach((img, i) => {
+        img.classList.remove('opacity-100', 'z-10');
+        img.classList.add('opacity-0', 'z-0', 'pointer-events-none');
+        if (i === index) {
+          img.classList.remove('opacity-0', 'z-0', 'pointer-events-none');
+          img.classList.add('opacity-100', 'z-10');
+        }
       });
+    }
 
-      nextBtn.addEventListener('click', () => {
-        currentIndex = (currentIndex + 1) % totalItems;
-        updateCarousel();
-      });
-    })();
-  </script>
-<?php endif; ?>
+    prevBtn.addEventListener('click', () => {
+      current = (current - 1 + total) % total;
+      showImage(current);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      current = (current + 1) % total;
+      showImage(current);
+    });
+  })();
+</script>

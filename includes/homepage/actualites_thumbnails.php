@@ -16,6 +16,16 @@ function h($str) {
 }
 
 $baseUrl = 'https://www.la-spa.fr';
+
+// Fetch group_elem data from DB (assuming $pdo is your PDO connection)
+$stmt = $pdo->query("SELECT * FROM group_elems LIMIT 1");
+$group = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$logo = $group['logo'];
+
+$color_primary = $group['color_primary'] ?? '#FFFFFF';      // For backgrounds except text
+$color_secondary = $group['color_secondary'] ?? '#FEF4EE';   // For secondary backgrounds except text
+$color_tertiary = $group['color_tertiary'] ?? '#F97316';     // For highlights except text
 ?>
 
 <style>
@@ -33,7 +43,7 @@ $baseUrl = 'https://www.la-spa.fr';
     width: 20vw;
     min-width: 320px;
     max-width: 100%;
-    background-color: #f9fafb; /* bg-gray-50 */
+    background-color: <?= $color_secondary ?>; /* bg-gray-50 */
     border-radius: 0.5rem; /* rounded-lg */
     box-shadow: 0 1px 3px rgb(0 0 0 / 0.1); /* shadow-md */
     transition: box-shadow 0.3s ease;
@@ -104,7 +114,7 @@ $baseUrl = 'https://www.la-spa.fr';
     .share-text {
       white-space: nowrap;
       margin-right: 0.25rem;
-      color: #4B5563; /* text-gray-700 */
+      color: black; /* text-gray-700 */
       font-size: 0.875rem; /* text-sm */
     }
 
@@ -124,7 +134,7 @@ $baseUrl = 'https://www.la-spa.fr';
     }
 
     .share-icons span.separator {
-      color: #9CA3AF; /* text-gray-400 */
+      color: black; /* text-black */
       user-select: none;
     }
   }
@@ -146,7 +156,7 @@ $baseUrl = 'https://www.la-spa.fr';
     .share-text {
       white-space: normal;
       margin-right: 0.25rem;
-      color: #4B5563; /* text-gray-700 */
+      color: black; /* text-gray-700 */
       font-size: 0.875rem; /* text-sm */
     }
 
@@ -229,8 +239,8 @@ $baseUrl = 'https://www.la-spa.fr';
   }
 </style>
 
-<div class="bg-white py-20">
-  <div class="container mx-auto px-4">
+<div class="bg-[<?= $color_primary ?>] py-20">
+  <div class="container mx-auto px-4 my-24">
 
     <div class="actualites-container">
       <?php foreach ($actualites as $index => $act): 
@@ -255,9 +265,9 @@ $baseUrl = 'https://www.la-spa.fr';
           <div class="actualite-content">
             <div>
               <a href="<?= h($url) ?>">
-                <p class="text-sm text-gray-400 mb-2"><?= h($date) ?></p>
-                <h3 class="text-md font-semibold text-gray-900 hover:text-orange-600 transition-colors"><?= h($title) ?></h3>
-                <p class="line-clamp-4"><?= h($description) ?></p>
+                <p class="text-sm text-black mb-2"><?= h($date) ?></p>
+                <h3 class="text-md font-semibold text-black transition-colors"><?= h($title) ?></h3>
+                <p class="line-clamp-4 text-black"><?= h($description) ?></p>
               </a>
             </div>
 
@@ -282,10 +292,6 @@ $baseUrl = 'https://www.la-spa.fr';
                     <span class="separator">|</span>
                     <a href="https://twitter.com/intent/tweet?text=<?= rawurlencode($shareText) ?>&url=<?= rawurlencode($shareUrl) ?>" target="_blank" rel="noopener noreferrer" title="Partager sur Twitter">
                       <img src="../assets/img/twitter.png" alt="Twitter" class="w-5 h-5" />
-                    </a>
-                    <span class="separator">|</span>
-                    <a href="https://www.instagram.com/sharer.php?u=<?= rawurlencode($shareUrl) ?>" target="_blank" rel="noopener noreferrer" title="Partager sur Instagram">
-                      <img src="../assets/img/instagram.png" alt="Instagram" class="w-5 h-5" />
                     </a>
                     <span class="separator">|</span>
                     <a href="mailto:?subject=<?= rawurlencode($mailSubject) ?>&body=<?= rawurlencode($mailBody) ?>" title="Partager par Email">

@@ -48,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+<body class=" min-h-screen">
   <section class="w-full min-h-[80vh] flex items-center justify-center px-4 py-12">
     <form method="POST" action="" class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-8 space-y-6">
       <h2 class="text-3xl font-bold text-center text-gray-800">Nous Contacter</h2>
@@ -84,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       </div>
 
       <div class="text-center">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded transition">
+        <button type="submit" class="bg-[<?= $color_tertiary ?>] hover:opacity-70 text-white font-semibold py-2 px-6 rounded transition">
           Envoyer
         </button>
       </div>

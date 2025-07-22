@@ -28,6 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['favorite_id'])) {
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     include '../includes/adoption/animal_display.php';
 } else {
+    include '../includes/adoption/adoption_info.php';
     include '../includes/adoption/animaux_search.php';
 }
 ?>
