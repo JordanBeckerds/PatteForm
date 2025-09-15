@@ -1,4 +1,4 @@
-  <div class="sm:w-[100vw] flex flex-col items-center justify-center mx-auto py-10 px-4">
+  <div class="sm:w-[100vw] flex flex-col items-center justify-center mx-auto my-20 sm:my-40 px-4">
     <h1 class="text-4xl sm:text-6xl font-bold text-[<?= $color_tertiary ?>] mb-12">À propos de <?= htmlspecialchars($name) ?></h1>
     <div class="w-[80vw] sm:w-auto space-y-6 text-6l sm:text-xl">
       <div>

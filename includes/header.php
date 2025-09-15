@@ -114,8 +114,9 @@ $parsedHoraires = parseHorairesOuvert($horaires_ouvert);
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Patteform</title>
+  <title><?= htmlspecialchars($name) ?></title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" type="image/x-icon" href="<?= htmlspecialchars($logo) ?>">
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const btn = document.getElementById("mobile-menu-button");

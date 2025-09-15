@@ -15,7 +15,9 @@ function h($str) {
     return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
 
-$baseUrl = 'https://www.la-spa.fr';
+$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
+$host = $_SERVER['HTTP_HOST'];
+$baseUrl = rtrim($protocol . $host, '/');
 
 // Fetch group_elem data from DB (assuming $pdo is your PDO connection)
 $stmt = $pdo->query("SELECT * FROM group_elems LIMIT 1");
@@ -247,7 +249,8 @@ $color_tertiary = $group['color_tertiary'] ?? '#F97316';     // For highlights e
           $title = $act['titre'] ?? 'Titre non disponible';
           $description = $act['description'] ?? 'Description non disponible';
           $slug = $act['slug'] ?? '';
-          $url = '../public/actualites.php?id=' . h($act['id']);
+          $local_url = '/actualites.php?id=' . h($act['id']);
+          $url = '/patteform/public/actualites.php?id=' . h($act['id']);
           $date = date('d.m.Y', strtotime($act['date'] ?? 'now'));
           $img = $act['img'] ?? 'https://via.placeholder.com/348x232?text=No+Image';
 
@@ -258,13 +261,13 @@ $color_tertiary = $group['color_tertiary'] ?? '#F97316';     // For highlights e
           $mailBody = $shareUrl;
       ?>
         <div class="actualite-card">
-          <a href="<?= h($url) ?>" class="actualite-image">
+          <a href="<?= h($local_url) ?>" class="actualite-image">
             <img src="<?= h($img) ?>" alt="<?= h($title) ?>" loading="lazy" />
           </a>
 
           <div class="actualite-content">
             <div>
-              <a href="<?= h($url) ?>">
+              <a href="<?= h($local_url) ?>">
                 <p class="text-sm text-black mb-2"><?= h($date) ?></p>
                 <h3 class="text-md font-semibold text-black transition-colors"><?= h($title) ?></h3>
                 <p class="line-clamp-4 text-black"><?= h($description) ?></p>
@@ -294,7 +297,7 @@ $color_tertiary = $group['color_tertiary'] ?? '#F97316';     // For highlights e
                       <img src="../assets/img/twitter.png" alt="Twitter" class="w-5 h-5" />
                     </a>
                     <span class="separator">|</span>
-                    <a href="mailto:?subject=<?= rawurlencode($mailSubject) ?>&body=<?= rawurlencode($mailBody) ?>" title="Partager par Email">
+                    <a href="mailto:?subject=<?= rawurlencode($mailSubject) ?>&body=<?= rawurlencode($mailBody) ?>" target="_blank" title="Partager par Email">
                       <img src="../assets/img/email.png" alt="Email" class="w-5 h-5" />
                     </a>
                   </div>

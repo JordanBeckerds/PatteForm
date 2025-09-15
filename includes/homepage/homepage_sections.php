@@ -39,7 +39,7 @@ if ($sections): ?>
 
                 <!-- Image -->
                 <div class="w-full md:w-1/2">
-                    <img src="<?= htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" class="w-full h-auto max-h-[700px] object-cover rounded-lg shadow-lg">
+                    <img src="<?= htmlspecialchars($row['img_url']) ?>" alt="<?= htmlspecialchars($row['title']) ?>" class="w-full h-auto max-h-[550px] object-cover rounded-lg shadow-lg">
                 </div>
 
             </div>
