@@ -1,243 +1,226 @@
--- ------------------------
--- Table: actualite
--- ------------------------
-CREATE TABLE `actualite` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `titre` VARCHAR(255) DEFAULT NULL,
-  `description` TEXT DEFAULT NULL,
-  `img` VARCHAR(255) DEFAULT NULL,
-  `date_publication` DATE DEFAULT NULL,
+-- PatteForm database schema
+-- Compatible with MySQL 5.7+ and MariaDB 10.4+
+-- Run this file once via the setup wizard or manually: mysql -u root -p patteform < sql/patteform.sql
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- Shelter / organization identity and branding
+CREATE TABLE IF NOT EXISTS `group_elems` (
+  `id`                     INT          NOT NULL AUTO_INCREMENT,
+  `group_name`             VARCHAR(75)  DEFAULT NULL,
+  `adress`                 VARCHAR(255) DEFAULT NULL,
+  `telephone`              VARCHAR(20)  DEFAULT NULL,
+  `logo`                   VARCHAR(255) DEFAULT NULL,
+  `date_creation`          DATE         DEFAULT NULL,
+  `color_primary`          VARCHAR(9)   DEFAULT '#FFFFFF',
+  `color_secondary`        VARCHAR(9)   DEFAULT '#FEF4EE',
+  `color_tertiary`         VARCHAR(9)   DEFAULT '#F97316',
+  `color_title`            VARCHAR(9)   DEFAULT '#1e293b',
+  `homepage_main_color_text` VARCHAR(9) DEFAULT '#F97316',
+  `homepage_main_bg`       VARCHAR(255) DEFAULT NULL,
+  `social_facebook`        VARCHAR(255) DEFAULT '#',
+  `social_instagram`       VARCHAR(255) DEFAULT '#',
+  `social_twitter`         VARCHAR(255) DEFAULT '#',
+  `horaires_ouvert`        VARCHAR(255) DEFAULT '',
+  `donation_link_bool`     BOOLEAN      DEFAULT FALSE,
+  `donation_link`          VARCHAR(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: actualite_secs
--- ------------------------
-CREATE TABLE `actualite_secs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `actualite_id` INT(11) NOT NULL,
-  `type` ENUM('carousel', 'mosaic', 'img', 'desc') NOT NULL,
-  `position` INT(11) DEFAULT NULL,
+-- Admin users
+CREATE TABLE IF NOT EXISTS `users` (
+  `id`              INT          NOT NULL AUTO_INCREMENT,
+  `username`        VARCHAR(100) NOT NULL,
+  `email`           VARCHAR(255) NOT NULL DEFAULT '',
+  `password`        VARCHAR(255) NOT NULL,
+  `role`            ENUM('admin','staff') NOT NULL DEFAULT 'staff',
+  `failed_attempts` TINYINT      NOT NULL DEFAULT 0,
+  `locked_until`    DATETIME     DEFAULT NULL,
+  `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  UNIQUE KEY `uq_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: carousel_secs
--- ------------------------
-CREATE TABLE `carousel_secs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `actualite_id` INT(11) NOT NULL,
+-- Animals available for adoption
+CREATE TABLE IF NOT EXISTS `animaux_a_adopter` (
+  `id`           INT          NOT NULL AUTO_INCREMENT,
+  `nom`          VARCHAR(255) DEFAULT NULL,
+  `espece`       ENUM('chien','chat','autre') DEFAULT NULL,
+  `race`         VARCHAR(255) DEFAULT NULL,
+  `prix`         INT          DEFAULT NULL,
+  `sexe`         ENUM('male','femelle') DEFAULT NULL,
+  `age`          INT          DEFAULT NULL,
+  `description`  TEXT         DEFAULT NULL,
+  `enfant`       BOOLEAN      DEFAULT NULL COMMENT 'Compatible with children',
+  `chat`         BOOLEAN      DEFAULT NULL COMMENT 'Compatible with cats',
+  `chien`        BOOLEAN      DEFAULT NULL COMMENT 'Compatible with dogs',
+  `autre`        BOOLEAN      DEFAULT NULL COMMENT 'Compatible with other animals',
+  `categorie`    ENUM('aucune','1','2') DEFAULT 'aucune',
+  `sos`          BOOLEAN      NOT NULL DEFAULT FALSE,
+  `date_arriver` DATE         DEFAULT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  INDEX `idx_espece` (`espece`),
+  INDEX `idx_sos`    (`sos`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: carousel_imgs
--- ------------------------
-CREATE TABLE `carousel_imgs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `carousel_id` INT(11) NOT NULL,
-  `img_url` VARCHAR(255) NOT NULL,
+-- Animals that have been adopted (references animaux_a_adopter)
+CREATE TABLE IF NOT EXISTS `animaux_adopter` (
+  `id`    INT          NOT NULL,
+  `nom`   VARCHAR(255) DEFAULT NULL,
+  `extra` TEXT         DEFAULT NULL,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`carousel_id`) REFERENCES `carousel_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  CONSTRAINT `fk_adopter_id`
+    FOREIGN KEY (`id`) REFERENCES `animaux_a_adopter` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: mosaic_secs
--- ------------------------
-CREATE TABLE `mosaic_secs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `actualite_id` INT(11) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Animal photos
+CREATE TABLE IF NOT EXISTS `photo_chiens` (
+  `img_id` INT          NOT NULL AUTO_INCREMENT,
+  `id`     INT          DEFAULT NULL,
+  `img`    VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`img_id`),
+  INDEX `idx_animal_id` (`id`),
+  CONSTRAINT `fk_photo_animal`
+    FOREIGN KEY (`id`) REFERENCES `animaux_a_adopter` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: mosaic_imgs
--- ------------------------
-CREATE TABLE `mosaic_imgs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `mosaic_id` INT(11) NOT NULL,
-  `img_url` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`mosaic_id`) REFERENCES `mosaic_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: img_secs
--- ------------------------
-CREATE TABLE `img_secs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `actualite_id` INT(11) NOT NULL,
-  `img_url` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: vid_secs
--- ------------------------
-CREATE TABLE `vid_secs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `actualite_id` INT(11) NOT NULL,
-  `vid_url` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: desc_secs
--- ------------------------
-CREATE TABLE `desc_secs` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `actualite_id` INT(11) NOT NULL,
-  `sec_title` VARCHAR(255) DEFAULT NULL,
-  `sec_txt` TEXT DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`actualite_id`) REFERENCES `actualite` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: Rencontrer
--- ------------------------
-CREATE TABLE `Rencontrer` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `dog_id` INT(11) NOT NULL,
-  `nom` VARCHAR(255) NOT NULL,
-  `prenom` VARCHAR(255) NOT NULL,
-  `email` VARCHAR(255) NOT NULL,
-  `telephone` BIGINT(20) NOT NULL,
-  `date_de_visite` DATE NOT NULL,
-  `heure_de_visite` INT(4) NOT NULL COMMENT 'Format: 1130 = 11h30',
-  PRIMARY KEY (`id`),
-  FOREIGN KEY (`dog_id`) REFERENCES `animaux_a_adopter`(`id`) ON DELETE CASCADE,
-  INDEX (`dog_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: contact
--- ------------------------
-CREATE TABLE `contact` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `nom` VARCHAR(255) DEFAULT NULL,
-  `prenom` VARCHAR(255) DEFAULT NULL,
-  `email` VARCHAR(255) DEFAULT NULL,
-  `telephone` VARCHAR(20) DEFAULT NULL,
-  `sujet` VARCHAR(255) DEFAULT NULL,
-  `message` TEXT DEFAULT NULL,
-  `date_envoi` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+-- News articles
+CREATE TABLE IF NOT EXISTS `actualite` (
+  `id`               INT          NOT NULL AUTO_INCREMENT,
+  `titre`            VARCHAR(255) DEFAULT NULL,
+  `description`      TEXT         DEFAULT NULL,
+  `img`              VARCHAR(255) DEFAULT NULL,
+  `date_publication` DATE         DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: equipe
--- ------------------------
-CREATE TABLE `equipe` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `nom` VARCHAR(255) DEFAULT NULL,
-  `prenom` VARCHAR(255) DEFAULT NULL,
-  `statut` VARCHAR(255) DEFAULT NULL,
-  `benevole` BOOLEAN DEFAULT NULL,
-  `img` VARCHAR(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Sections within a news article
+CREATE TABLE IF NOT EXISTS `actualite_secs` (
+  `id`          INT  NOT NULL AUTO_INCREMENT,
+  `actualite_id` INT NOT NULL,
+  `type`        ENUM('carousel','mosaic','img','desc') NOT NULL,
+  `position`    INT  DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `idx_actu_id` (`actualite_id`),
+  CONSTRAINT `fk_actu_sec_actu`
+    FOREIGN KEY (`actualite_id`) REFERENCES `actualite` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: homepage_sections
--- ------------------------
-CREATE TABLE `homepage_sections` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `desc_secs` (
+  `id`          INT          NOT NULL AUTO_INCREMENT,
+  `actualite_id` INT         NOT NULL,
+  `sec_title`   VARCHAR(255) DEFAULT NULL,
+  `sec_txt`     TEXT         DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_desc_sec_actu`
+    FOREIGN KEY (`actualite_id`) REFERENCES `actualite` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `carousel_secs` (
+  `id`          INT NOT NULL AUTO_INCREMENT,
+  `actualite_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_carousel_sec`
+    FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `carousel_imgs` (
+  `id`          INT          NOT NULL AUTO_INCREMENT,
+  `carousel_id` INT          NOT NULL,
+  `img_url`     VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_carousel_img`
+    FOREIGN KEY (`carousel_id`) REFERENCES `carousel_secs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `mosaic_secs` (
+  `id`          INT NOT NULL AUTO_INCREMENT,
+  `actualite_id` INT NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_mosaic_sec`
+    FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `mosaic_imgs` (
+  `id`        INT          NOT NULL AUTO_INCREMENT,
+  `mosaic_id` INT          NOT NULL,
+  `img_url`   VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_mosaic_img`
+    FOREIGN KEY (`mosaic_id`) REFERENCES `mosaic_secs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `img_secs` (
+  `id`          INT          NOT NULL AUTO_INCREMENT,
+  `actualite_id` INT         NOT NULL,
+  `img_url`     VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_img_sec`
+    FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `vid_secs` (
+  `id`          INT          NOT NULL AUTO_INCREMENT,
+  `actualite_id` INT         NOT NULL,
+  `vid_url`     VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `fk_vid_sec`
+    FOREIGN KEY (`actualite_id`) REFERENCES `actualite_secs` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Homepage configurable sections
+CREATE TABLE IF NOT EXISTS `homepage_sections` (
+  `id`          INT          NOT NULL AUTO_INCREMENT,
   `section_key` VARCHAR(100) NOT NULL,
-  `title` VARCHAR(255) DEFAULT NULL,
-  `description` TEXT DEFAULT NULL,
-  `img_url` VARCHAR(255) DEFAULT NULL,
+  `title`       VARCHAR(255) DEFAULT NULL,
+  `description` TEXT         DEFAULT NULL,
+  `img_url`     VARCHAR(255) DEFAULT NULL,
   `button_text` VARCHAR(100) DEFAULT NULL,
   `button_link` VARCHAR(255) DEFAULT NULL,
-  `visible` BOOLEAN DEFAULT TRUE,
+  `visible`     BOOLEAN      NOT NULL DEFAULT TRUE,
   PRIMARY KEY (`id`),
-  INDEX idx_section (`section_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  INDEX `idx_section_key` (`section_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: animaux_a_adopter
--- ------------------------
-CREATE TABLE `animaux_a_adopter` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `nom` VARCHAR(255) DEFAULT NULL,
-  `espece` ENUM('chien','chat','autre') DEFAULT NULL,
-  `race` VARCHAR(255) DEFAULT NULL,
-  `prix` INT DEFAULT NULL,
-  `sexe` ENUM('male','femelle') DEFAULT NULL,
-  `age` INT DEFAULT NULL,
-  `description` TEXT DEFAULT NULL,
-  `enfant` BOOLEAN DEFAULT NULL,
-  `chat` BOOLEAN DEFAULT NULL,
-  `chien` BOOLEAN DEFAULT NULL,
-  `autre` BOOLEAN DEFAULT NULL,
-  `categorie` ENUM('aucune','1','2') DEFAULT NULL,
-  `sos` BOOLEAN DEFAULT FALSE,
-  `date_arriver` DATE DEFAULT NULL,
+-- Visit scheduling requests
+CREATE TABLE IF NOT EXISTS `Rencontrer` (
+  `id`             INT         NOT NULL AUTO_INCREMENT,
+  `dog_id`         INT         NOT NULL,
+  `nom`            VARCHAR(255) NOT NULL,
+  `prenom`         VARCHAR(255) NOT NULL,
+  `email`          VARCHAR(255) NOT NULL,
+  `telephone`      VARCHAR(20)  NOT NULL,
+  `date_de_visite` DATE         NOT NULL,
+  `heure_de_visite` SMALLINT   NOT NULL COMMENT 'Format: 1130 = 11h30',
   PRIMARY KEY (`id`),
-  INDEX idx_espece (`espece`),
-  INDEX idx_sos (`sos`),
-  INDEX idx_date_arriver (`date_arriver`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  INDEX `idx_dog_id` (`dog_id`),
+  CONSTRAINT `fk_rencontrer_animal`
+    FOREIGN KEY (`dog_id`) REFERENCES `animaux_a_adopter` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: animaux_adopter
--- ------------------------
-CREATE TABLE `animaux_adopter` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `nom` VARCHAR(255),
-  `extra` TEXT,
-  PRIMARY KEY (`id`),
-  CONSTRAINT `animaux_adopter_ibfk_1` FOREIGN KEY (`id`) REFERENCES `animaux_a_adopter` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: photo_chiens
--- ------------------------
-CREATE TABLE `photo_chiens` (
-  `img_id` INT(11) NOT NULL AUTO_INCREMENT,
-  `id` INT(11) DEFAULT NULL,
-  `img` VARCHAR(255) DEFAULT NULL,
-  PRIMARY KEY (`img_id`),
-  KEY `id` (`id`),
-  CONSTRAINT `photo_chiens_ibfk_1` FOREIGN KEY (`id`) REFERENCES `animaux_a_adopter` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- ------------------------
--- Table: group_elems
--- ------------------------
-CREATE TABLE `group_elems` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `adress` VARCHAR(255) DEFAULT NULL,
-  `group_name` VARCHAR(75) DEFAULT NULL,
-  `social_facebook` VARCHAR(255) DEFAULT '#',
-  `social_instagram` VARCHAR(255) DEFAULT '#',
-  `social_twitter` VARCHAR(255) DEFAULT '#',
-  `telephone` INT(10)) DEFAULT NULL,
-  `horaires_ouvert` VARCHAR(255) DEFAULT '1700000000',
-  `logo` VARCHAR(255) DEFAULT NULL,
-  `date_creation` DATE DEFAULT NULL,
-  `color_primary` VARCHAR(8) DEFAULT NULL,
-  `color_secondary` VARCHAR(8) DEFAULT NULL,
-  `color_tertiary` VARCHAR(8) DEFAULT NULL,
-  `donation_link_bool` BOOLEAN DEFAULT FALSE,
-  `donation_link` VARCHAR(255) DEFAULT NULL,
-  `homepage_main_color_text` VARCHAR(8) DEFAULT NULL,
-  `homepage_main_bg` VARCHAR(255) DEFAULT NULL,
+-- Contact form submissions
+CREATE TABLE IF NOT EXISTS `contact` (
+  `id`         INT          NOT NULL AUTO_INCREMENT,
+  `nom`        VARCHAR(255) DEFAULT NULL,
+  `prenom`     VARCHAR(255) DEFAULT NULL,
+  `email`      VARCHAR(255) DEFAULT NULL,
+  `telephone`  VARCHAR(20)  DEFAULT NULL,
+  `sujet`      VARCHAR(255) DEFAULT NULL,
+  `message`    TEXT         DEFAULT NULL,
+  `date_envoi` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `lu`         BOOLEAN      NOT NULL DEFAULT FALSE COMMENT 'Mark as read in dashboard',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ------------------------
--- Table: users
--- ------------------------
-CREATE TABLE `users` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `username` VARCHAR(255) NOT NULL,
-  `pws` VARCHAR(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_username` (`username`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+-- Team members
+CREATE TABLE IF NOT EXISTS `equipe` (
+  `id`       INT          NOT NULL AUTO_INCREMENT,
+  `nom`      VARCHAR(255) DEFAULT NULL,
+  `prenom`   VARCHAR(255) DEFAULT NULL,
+  `statut`   VARCHAR(255) DEFAULT NULL,
+  `benevole` BOOLEAN      DEFAULT FALSE,
+  `img`      VARCHAR(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
