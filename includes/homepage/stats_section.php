@@ -1,85 +1,45 @@
 <?php
-// Fetch group_elem data from DB (assuming $pdo is your PDO connection)
-$stmt = $pdo->query("SELECT * FROM group_elems LIMIT 1");
-$group = $stmt->fetch(PDO::FETCH_ASSOC);
+// Included by public pages — no standalone HTML wrapper
 
-$logo = $group['logo'];
+$stmtGroup = $pdo->query('SELECT * FROM group_elems LIMIT 1');
+$groupStats = $stmtGroup->fetch(PDO::FETCH_ASSOC);
 
-$color_primary = $group['color_primary'] ?? '#FFFFFF';      // For backgrounds except text
-$color_secondary = $group['color_secondary'] ?? '#FEF4EE';   // For secondary backgrounds except text
-$color_tertiary = $group['color_tertiary'] ?? '#F97316';     // For highlights except text
+$color_primary_s   = $groupStats['color_primary']   ?? '#FFFFFF';
+$color_secondary_s = $groupStats['color_secondary'] ?? '#FEF4EE';
+$color_tertiary_s  = $groupStats['color_tertiary']  ?? '#F97316';
 
 try {
-    $stmtToAdopt = $pdo->query("SELECT COUNT(*) as total_to_adopt FROM animaux_a_adopter");
-    $totalToAdopt = $stmtToAdopt->fetch(PDO::FETCH_ASSOC)['total_to_adopt'] ?? 0;
-
-    $stmtAdopted = $pdo->query("SELECT COUNT(*) as total_adopted FROM animaux_adopter");
-    $totalAdopted = $stmtAdopted->fetch(PDO::FETCH_ASSOC)['total_adopted'] ?? 0;
-
+    $totalToAdoptS = $pdo->query('SELECT COUNT(*) FROM animaux_a_adopter')->fetchColumn();
+    $totalAdoptedS = $pdo->query('SELECT COUNT(*) FROM animaux_adopter')->fetchColumn();
 } catch (PDOException $e) {
-    $totalToAdopt = 0;
-    $totalAdopted = 0;
-    error_log("Database error: " . $e->getMessage());
+    $totalToAdoptS = $totalAdoptedS = 0;
+    error_log('PatteForm stats: ' . $e->getMessage());
 }
 
-$year = (new DateTime($date_creation))->format('Y');
+$dc = $groupStats['date_creation'] ?? null;
+$yearS = $dc ? (new DateTime($dc))->format('Y') : date('Y');
 ?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Statistiques Animaux</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.x/dist/tailwind.min.css" rel="stylesheet" />
-  <style>
-    :root {
-      --color_primary: <?= $color_primary ?>;
-      --color_secondary: <?= $color_secondary ?>;
-      --color_tertiary: <?= $color_tertiary ?>;
-    }
-
-    .bg-primary {
-      background-color: var(--color_primary);
-    }
-
-    .bg-secondary {
-      background-color: var(--color_secondary);
-    }
-
-    .bg-tertiary {
-      background-color: var(--color_tertiary);
-    }
-  </style>
-</head>
-<body>
-
-<div class="bg-primary py-16">
+<div style="background-color:<?= htmlspecialchars($color_primary_s, ENT_QUOTES, 'UTF-8') ?>" class="py-16">
   <div class="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-    
-    <!-- Animals to Adopt -->
+
     <div class="flex flex-col items-center">
-      <img src="../assets/img/a_adopter.png" alt="Animaux à adopter" class="w-16 h-16 mb-4" />
-      <span class="text-3xl text-black font-semibold tracking-wider"><?= number_format($totalToAdopt, 0, ',', ' ') ?></span>
-      <p class="uppercase text-black text-sm font-semibold mt-1">Animaux à adopter</p>
+      <img src="../assets/img/a_adopter.png" alt="Animaux &#224; adopter" class="w-16 h-16 mb-4" />
+      <span class="text-3xl text-black font-semibold tracking-wider"><?= (int)$totalToAdoptS ?></span>
+      <p class="uppercase text-black text-sm font-semibold mt-1">Animaux &#224; adopter</p>
     </div>
 
-    <!-- Date de création -->
     <div class="flex flex-col items-center">
-      <img src="../assets/img/date_creation.png" alt="Date de création" class="w-16 h-16 mb-4" />
-      <span class="text-3xl text-black font-semibold tracking-wider"><?= $year ?></span>
-      <p class="uppercase text-black text-sm font-semibold mt-1">Date de création</p>
+      <img src="../assets/img/date_creation.png" alt="Date de cr&#233;ation" class="w-16 h-16 mb-4" />
+      <span class="text-3xl text-black font-semibold tracking-wider"><?= htmlspecialchars($yearS, ENT_QUOTES, 'UTF-8') ?></span>
+      <p class="uppercase text-black text-sm font-semibold mt-1">Date de cr&#233;ation</p>
     </div>
 
-    <!-- Animaux adoptés -->
     <div class="flex flex-col items-center">
-      <img src="../assets/img/adopter.png" alt="Animaux adoptés" class="w-16 h-16 mb-4" />
-      <span class="text-3xl text-black font-semibold tracking-wider"><?= number_format($totalAdopted, 0, ',', ' ') ?></span>
-      <p class="uppercase text-black text-sm font-semibold mt-1">Animaux adoptés</p>
+      <img src="../assets/img/adopter.png" alt="Animaux adopt&#233;s" class="w-16 h-16 mb-4" />
+      <span class="text-3xl text-black font-semibold tracking-wider"><?= (int)$totalAdoptedS ?></span>
+      <p class="uppercase text-black text-sm font-semibold mt-1">Animaux adopt&#233;s</p>
     </div>
 
   </div>
 </div>
-
-</body>
-</html>
